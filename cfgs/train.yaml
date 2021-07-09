@@ -12,4 +12,4 @@ dset:   # leave blank
     data_dir: data/ttfs/train   # path to .ttf files for the training
   val:   # leave blank
     data_dir: data/ttfs/val   # path to .ttf files for the validation
-    source_font: data/ttfs/val/LongCang-Regular.ttf   # path to the .ttf file used as the source font during the validation
+    source_font: data/ttfs/val/ipag.ttf    # path to the .ttf file used as the source font during the validation
