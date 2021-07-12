@@ -14,6 +14,8 @@ from datasets import get_test_loader
 from models import Generator
 from sconf import Config
 from train import setup_transforms
+import re
+code_regex = re.compile('[!"#$%&\'\\\\()*+,-./:;<=>?@[\\]^_`{|}~]')
 
 
 def eval_ckpt():
@@ -49,6 +51,9 @@ def eval_ckpt():
 
         for image, font, char in zip(refine(out), fonts, chars):
             (img_dir / font).mkdir(parents=True, exist_ok=True)
+            if code_regex.match(char) is not None:
+                # escape
+                char = hex(ord(char))
             path = img_dir / font / f"{char}.png"
             save_tensor_to_image(image, path)
 

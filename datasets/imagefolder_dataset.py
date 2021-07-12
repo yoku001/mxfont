@@ -32,6 +32,7 @@ class ImageTestDataset(Dataset):
 
     def load_data_list(self, data_dir, extension):
         fonts = [x.name for x in data_dir.iterdir() if x.is_dir()]
+        fonts = [d for d in fonts if d != ".ipynb_checkpoints"]
 
         font_chars = {}
         for font in fonts:
