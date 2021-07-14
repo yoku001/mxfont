@@ -38,6 +38,18 @@ def overwrite_weight(model, pre_weight):
     model_dict = model.state_dict()
     pre_weight = {k: v for k, v in pre_weight.items() if k in model_dict}
 
+    for k in pre_weight:
+        if k in model_dict:
+            if pre_weight[k].shape != model_dict[k].shape:
+                print(f"Skip loading parameter: {k}, "
+                            f"required shape: {model_dict[k].shape}, "
+                            f"loaded shape: {pre_weight[k].shape}")
+                pre_weight[k] = model_dict[k]
+                is_changed = True
+        else:
+            print(f"Dropping parameter {k}")
+            is_changed = True
+
     model_dict.update(pre_weight)
     model.load_state_dict(model_dict)
 
