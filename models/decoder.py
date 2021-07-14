@@ -5,6 +5,7 @@ MIT license
 """
 
 from functools import partial
+from timm.models.layers import create_attn
 import torch
 import torch.nn as nn
 from .modules import ConvBlock, ResBlock
@@ -62,7 +63,9 @@ def dec_builder(C, C_out, n_experts, norm='IN', activ='relu', pad_type='reflect'
         ResBlk(C*8, C*8, 3, 1),
         ConvBlk(C*8, C*4, 3, 1, 1, upsample=True),   # 32x32
         ConvBlk(C*8, C*2, 3, 1, 1, upsample=True),   # 64x64
+        create_attn("se", C*2),
         ConvBlk(C*2, C*1, 3, 1, 1, upsample=True),   # 128x128
+        create_attn("se", C*1),
         ConvBlk(C*1, C_out, 3, 1, 1)
     ]
     skip_idx = 5
