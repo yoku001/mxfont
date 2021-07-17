@@ -57,15 +57,13 @@ def dec_builder(C, C_out, n_experts, norm='IN', activ='relu', pad_type='reflect'
     IntegrateBlk = partial(Integrator, norm='none', activ='none')
 
     layers = [
-        ConvBlk(C*8*n_experts, C*8, 1, 1, 0, norm="none", activ="none"),
+        ConvBlk(C*8*n_experts, C*8, 1, 1, 0, norm="none", activ="none", attn="gc"),
         ResBlk(C*8, C*8, 3, 1),
         ResBlk(C*8, C*8, 3, 1),
         ResBlk(C*8, C*8, 3, 1),
         ConvBlk(C*8, C*4, 3, 1, 1, upsample=True),   # 32x32
-        ConvBlk(C*8, C*2, 3, 1, 1, upsample=True),   # 64x64
-        create_attn("se", C*2),
-        ConvBlk(C*2, C*1, 3, 1, 1, upsample=True),   # 128x128
-        create_attn("se", C*1),
+        ConvBlk(C*8, C*2, 3, 1, 1, upsample=True, attn="gc"),   # 64x64
+        ConvBlk(C*2, C*1, 3, 1, 1, upsample=True, attn="gc"),   # 128x128
         ConvBlk(C*1, C_out, 3, 1, 1)
     ]
     skip_idx = 5

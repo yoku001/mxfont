@@ -110,7 +110,7 @@ class ConvBlock(nn.Module):
     """ pre-active conv block """
     def __init__(self, C_in, C_out, kernel_size=3, stride=1, padding=1, norm='none',
                  activ='relu', bias=True, upsample=False, downsample=False, w_norm='none',
-                 pad_type='zero', dropout=0., size=None):
+                 pad_type='zero', dropout=0., size=None, attn=None):
         # 1x1 conv assertion
         if kernel_size == 1:
             assert padding == 0
@@ -140,6 +140,9 @@ class ConvBlock(nn.Module):
         self.pad = pad(padding)
         self.conv = w_norm(nn.Conv2d(C_in, C_out, kernel_size, stride, bias=bias))
 
+        if attn is not None:
+            self.attn_layer = create_attn(attn, C_out)
+
     def forward(self, x):
         x = self.norm(x)
         x = self.activ(x)
@@ -148,6 +151,8 @@ class ConvBlock(nn.Module):
         if hasattr(self, 'dropout'):
             x = self.dropout(x)
         x = self.conv(self.pad(x))
+        if hasattr(self, 'attn_layer'):
+            x = self.attn_layer(x)
         if self.downsample:
             x = F.avg_pool2d(x, 2)
         return x
@@ -157,7 +162,7 @@ class ResBlock(nn.Module):
     """ Pre-activate ResBlock with spectral normalization """
     def __init__(self, C_in, C_out, kernel_size=3, padding=1, upsample=False, downsample=False,
                  norm='none', w_norm='none', activ='relu', pad_type='zero', dropout=0.,
-                 scale_var=False, se=False):
+                 scale_var=False, attn=None):
         assert not (upsample and downsample)
         super().__init__()
         w_norm = w_norm_dispatch(w_norm)
@@ -166,7 +171,6 @@ class ResBlock(nn.Module):
         self.upsample = upsample
         self.downsample = downsample
         self.scale_var = scale_var
-        self.se = se
 
         self.conv1 = ConvBlock(C_in, C_out, kernel_size, 1, padding, norm, activ,
                                upsample=upsample, w_norm=w_norm, pad_type=pad_type,
@@ -174,8 +178,8 @@ class ResBlock(nn.Module):
         self.conv2 = ConvBlock(C_out, C_out, kernel_size, 1, padding, norm, activ,
                                w_norm=w_norm, pad_type=pad_type, dropout=dropout)
 
-        if self.se:
-            self.attn_layer = create_attn("se", C_out)
+        if attn is not None:
+            self.attn_layer = create_attn(attn, C_out)
 
         # XXX upsample / downsample needs skip conv?
         if C_in != C_out or upsample or downsample:
@@ -193,7 +197,7 @@ class ResBlock(nn.Module):
         out = self.conv1(out)
         out = self.conv2(out)
 
-        if self.se:
+        if hasattr(self, 'attn_layer'):
             out = self.attn_layer(out)
 
         if self.downsample:
